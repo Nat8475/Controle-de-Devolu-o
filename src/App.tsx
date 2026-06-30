@@ -8,8 +8,11 @@ import { RequireAuth } from '@/components/RequireAuth'
 
 import LoginPage from '@/pages/LoginPage'
 import AccessDeniedPage from '@/pages/AccessDeniedPage'
+import { RequireModule } from '@/components/RequireModule'
 
 const HomePage = lazy(() => import('@/pages/HomePage'))
+const NotasPage = lazy(() => import('@/pages/notas/NotasPage'))
+const LancamentoPage = lazy(() => import('@/pages/lancamento/LancamentoPage'))
 
 const qc = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -33,14 +36,17 @@ export default function App() {
 
               <Route element={<RequireAuth />}>
                 <Route element={<Shell />}>
-                  <Route
-                    path="/app/home"
-                    element={
-                      <Suspense fallback={<PageLoader />}>
-                        <HomePage />
-                      </Suspense>
-                    }
-                  />
+                  <Route path="/app/home" element={<Suspense fallback={<PageLoader />}><HomePage /></Suspense>} />
+                  <Route path="/app/notas" element={
+                    <RequireModule mod="notas">
+                      <Suspense fallback={<PageLoader />}><NotasPage /></Suspense>
+                    </RequireModule>
+                  } />
+                  <Route path="/app/lancamento" element={
+                    <RequireModule mod="lancamento">
+                      <Suspense fallback={<PageLoader />}><LancamentoPage /></Suspense>
+                    </RequireModule>
+                  } />
                 </Route>
               </Route>
 
