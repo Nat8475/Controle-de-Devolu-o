@@ -13,6 +13,7 @@ import { RequireModule } from '@/components/RequireModule'
 const HomePage = lazy(() => import('@/pages/HomePage'))
 const NotasPage = lazy(() => import('@/pages/notas/NotasPage'))
 const LancamentoPage = lazy(() => import('@/pages/lancamento/LancamentoPage'))
+const TransferenciasPage = lazy(() => import('@/pages/transferencias/TransferenciasPage'))
 
 const qc = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -45,6 +46,11 @@ export default function App() {
                   <Route path="/app/lancamento" element={
                     <RequireModule mod="lancamento">
                       <Suspense fallback={<PageLoader />}><LancamentoPage /></Suspense>
+                    </RequireModule>
+                  } />
+                  <Route path="/app/transferencias" element={
+                    <RequireModule mod="transferencias">
+                      <Suspense fallback={<PageLoader />}><TransferenciasPage /></Suspense>
                     </RequireModule>
                   } />
                 </Route>
