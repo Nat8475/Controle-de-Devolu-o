@@ -324,7 +324,6 @@ export function NotaDetail({ id, onClose }: Props) {
                       </Button>
                     </form>
                   </TabsContent>
-                </Tabs>
 
                   <TabsContent value="respostas" className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col mt-3">
                     <p className="text-xs text-[var(--text-muted)] mb-3">Registre respostas e posições recebidas do fornecedor.</p>
@@ -362,6 +361,7 @@ export function NotaDetail({ id, onClose }: Props) {
                       </Button>
                     </form>
                   </TabsContent>
+                </Tabs>
 
                 <TransferenciaDialog nota={nota as Parameters<typeof TransferenciaDialog>[0]['nota']} open={tfOpen} onClose={() => setTfOpen(false)} />
                 <ComposeEmailDialog open={emailOpen} onClose={() => setEmailOpen(false)} />
