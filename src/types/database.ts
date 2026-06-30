@@ -97,6 +97,27 @@ export interface Comentario {
   created_at: string
 }
 
+export interface EmailLog {
+  id: string
+  nota_ids: string[]
+  destinatarios: string[]
+  assunto: string | null
+  corpo_html: string | null
+  status: 'enviado' | 'agendado' | 'erro'
+  agendado_para: string | null
+  enviado_em: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export interface RespostaFornecedor {
+  id: string
+  nota_fiscal_id: string
+  user_id: string
+  texto: string
+  created_at: string
+}
+
 export interface AuditLog {
   id: string
   user_id: string | null

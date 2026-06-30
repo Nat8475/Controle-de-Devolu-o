@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X, Save, ArrowRightLeft, ShoppingCart, RefreshCw, Send } from 'lucide-react'
+import { X, Save, ArrowRightLeft, ShoppingCart, RefreshCw, Send, Mail } from 'lucide-react'
 import { useNotaDetail, useNotasMutation } from '@/hooks/useNotas'
 import { useComentariosMutation, useNotaTransferencias, useTransferenciasMutation } from '@/hooks/useTransferencias'
+import { useAddResposta, useRespostasFornecedor } from '@/hooks/useEmail'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TransferenciaDialog } from './TransferenciaDialog'
-import type { FreteTipo, SupabaseStatus } from '@/types/database'
+import { ComposeEmailDialog } from '@/pages/email/ComposeEmailDialog'
+import type { FreteTipo, NotaFiscal, SupabaseStatus } from '@/types/database'
 
 const STATUS_OPTIONS: SupabaseStatus[] = ['Pendente', 'Em Transferência', 'Devolvido', 'Cancelado', 'Vendido']
 const FRETE_TIPOS: FreteTipo[] = ['Tabela', 'Valor+ICMS', 'Valor', 'Cortesia']
@@ -32,8 +34,13 @@ export function NotaDetail({ id, onClose }: Props) {
   const [obs, setObs] = useState('')
   const [freteTipo, setFreteTipo] = useState<FreteTipo | ''>('')
   const [freteValor, setFreteValor] = useState('')
+  const { data: respostas = [] } = useRespostasFornecedor(id)
+  const addResposta = useAddResposta(id ?? '')
+
   const [tfOpen, setTfOpen] = useState(false)
+  const [emailOpen, setEmailOpen] = useState(false)
   const [comentarioTxt, setComentarioTxt] = useState('')
+  const [respostaTxt, setRespostaTxt] = useState('')
 
   if (nota) {
     if (obs === '' && nota.obs) setObs(nota.obs)
@@ -127,6 +134,9 @@ export function NotaDetail({ id, onClose }: Props) {
                   <Button size="sm" variant="outline" onClick={handleVenda} className="text-xs gap-1.5">
                     <ShoppingCart className="w-3.5 h-3.5" />Venda
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => setEmailOpen(true)} className="text-xs gap-1.5">
+                    <Mail className="w-3.5 h-3.5" />E-mail
+                  </Button>
                   {nota.status !== 'Pendente' && (
                     <Button size="sm" variant="outline" onClick={handleReabrir} className="text-xs gap-1.5">
                       <RefreshCw className="w-3.5 h-3.5" />Reabrir
@@ -142,6 +152,9 @@ export function NotaDetail({ id, onClose }: Props) {
                     </TabsTrigger>
                     <TabsTrigger value="comentarios">
                       Comentários {comentarios && comentarios.length > 0 && `(${comentarios.length})`}
+                    </TabsTrigger>
+                    <TabsTrigger value="respostas">
+                      Fornecedor {respostas.length > 0 && `(${respostas.length})`}
                     </TabsTrigger>
                   </TabsList>
 
@@ -313,7 +326,45 @@ export function NotaDetail({ id, onClose }: Props) {
                   </TabsContent>
                 </Tabs>
 
+                  <TabsContent value="respostas" className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col mt-3">
+                    <p className="text-xs text-[var(--text-muted)] mb-3">Registre respostas e posições recebidas do fornecedor.</p>
+                    <div className="flex-1 space-y-3 mb-4">
+                      {respostas.length === 0 ? (
+                        <p className="text-sm text-[var(--text-muted)] py-4 text-center">Nenhuma resposta registrada.</p>
+                      ) : (
+                        respostas.map(r => (
+                          <div key={r.id} className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-[var(--text)]">{r.profiles?.nome ?? 'Usuário'}</span>
+                              <span className="text-xs text-[var(--text-muted)]">
+                                {new Date(r.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                              </span>
+                            </div>
+                            <p className="text-sm text-[var(--text)] bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-btn px-3 py-2">{r.texto}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <form onSubmit={async e => {
+                      e.preventDefault()
+                      if (!respostaTxt.trim()) return
+                      await addResposta.mutateAsync(respostaTxt.trim())
+                      setRespostaTxt('')
+                    }} className="flex gap-2">
+                      <input
+                        value={respostaTxt}
+                        onChange={e => setRespostaTxt(e.target.value)}
+                        placeholder="Registrar resposta do fornecedor..."
+                        className="flex-1 rounded-btn border border-[var(--border)] bg-surface dark:bg-surface-dark text-[var(--text)] text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      />
+                      <Button type="submit" size="sm" className="bg-primary" disabled={addResposta.isPending}>
+                        <Send className="w-3.5 h-3.5" />
+                      </Button>
+                    </form>
+                  </TabsContent>
+
                 <TransferenciaDialog nota={nota as Parameters<typeof TransferenciaDialog>[0]['nota']} open={tfOpen} onClose={() => setTfOpen(false)} />
+                <ComposeEmailDialog open={emailOpen} onClose={() => setEmailOpen(false)} preSelectedNota={nota as NotaFiscal} />
               </>
             ) : null}
           </motion.div>
