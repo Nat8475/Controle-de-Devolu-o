@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import {
-  FileText, Plus, Mail, ArrowRightLeft, Truck, RefreshCw,
-  ShoppingCart, FileDown, BarChart2, FileBarChart, Search,
+  FileText, Plus, Mail, ArrowRightLeft,
+  BarChart2, FileBarChart,
   ClipboardList, Database, Settings
 } from 'lucide-react'
 import { usePermission } from '@/hooks/usePermission'
@@ -12,15 +12,10 @@ export const NAV_ITEMS = [
   { path: '/app/home', icon: BarChart2, label: 'Início', mod: null },
   { path: '/app/notas', icon: FileText, label: 'Notas', mod: 'notas' as Modulo },
   { path: '/app/lancamento', icon: Plus, label: 'Lançamento', mod: 'lancamento' as Modulo },
-  { path: '/app/email', icon: Mail, label: 'E-mail', mod: 'email' as Modulo },
   { path: '/app/transferencias', icon: ArrowRightLeft, label: 'Transferências', mod: 'transferencias' as Modulo },
-  { path: '/app/frete', icon: Truck, label: 'Frete', mod: 'transferencias' as Modulo },
-  { path: '/app/reabertura', icon: RefreshCw, label: 'Reabertura', mod: 'notas' as Modulo },
-  { path: '/app/venda', icon: ShoppingCart, label: 'Venda', mod: 'notas' as Modulo },
-  { path: '/app/exportar-pdf', icon: FileDown, label: 'Exportar PDF', mod: 'notas' as Modulo },
+  { path: '/app/email', icon: Mail, label: 'E-mail', mod: 'email' as Modulo },
   { path: '/app/dashboard', icon: BarChart2, label: 'Dashboard', mod: 'dashboard' as Modulo },
   { path: '/app/relatorios', icon: FileBarChart, label: 'Relatórios', mod: 'relatorios' as Modulo },
-  { path: '/app/busca', icon: Search, label: 'Busca', mod: null },
   { path: '/app/auditoria', icon: ClipboardList, label: 'Auditoria', mod: 'auditoria' as Modulo },
   { path: '/app/backup', icon: Database, label: 'Backup', mod: 'backup' as Modulo },
   { path: '/app/configuracoes', icon: Settings, label: 'Configurações', mod: 'configuracoes' as Modulo },
