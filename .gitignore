@@ -27,3 +27,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+supabase/.temp/
+
+# Migration script secrets
+scripts/migrate-sheets/.env
+scripts/migrate-sheets/node_modules/

@@ -1,0 +1,13 @@
+{
+  "name": "migrate-sheets",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "migrate": "node index.js"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0",
+    "@supabase/supabase-js": "^2.0.0",
+    "dotenv": "^16.0.0"
+  }
+}
