@@ -17,6 +17,9 @@ const TransferenciasPage = lazy(() => import('@/pages/transferencias/Transferenc
 const EmailPage = lazy(() => import('@/pages/email/EmailPage'))
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'))
 const RelatoriosPage = lazy(() => import('@/pages/relatorios/RelatoriosPage'))
+const AuditoriaPage = lazy(() => import('@/pages/auditoria/AuditoriaPage'))
+const BackupPage = lazy(() => import('@/pages/backup/BackupPage'))
+const ConfiguracoesPage = lazy(() => import('@/pages/configuracoes/ConfiguracoesPage'))
 
 const qc = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -69,6 +72,21 @@ export default function App() {
                   <Route path="/app/relatorios" element={
                     <RequireModule mod="relatorios">
                       <Suspense fallback={<PageLoader />}><RelatoriosPage /></Suspense>
+                    </RequireModule>
+                  } />
+                  <Route path="/app/auditoria" element={
+                    <RequireModule mod="auditoria">
+                      <Suspense fallback={<PageLoader />}><AuditoriaPage /></Suspense>
+                    </RequireModule>
+                  } />
+                  <Route path="/app/backup" element={
+                    <RequireModule mod="backup">
+                      <Suspense fallback={<PageLoader />}><BackupPage /></Suspense>
+                    </RequireModule>
+                  } />
+                  <Route path="/app/configuracoes" element={
+                    <RequireModule mod="configuracoes">
+                      <Suspense fallback={<PageLoader />}><ConfiguracoesPage /></Suspense>
                     </RequireModule>
                   } />
                 </Route>
