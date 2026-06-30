@@ -15,6 +15,8 @@ const NotasPage = lazy(() => import('@/pages/notas/NotasPage'))
 const LancamentoPage = lazy(() => import('@/pages/lancamento/LancamentoPage'))
 const TransferenciasPage = lazy(() => import('@/pages/transferencias/TransferenciasPage'))
 const EmailPage = lazy(() => import('@/pages/email/EmailPage'))
+const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'))
+const RelatoriosPage = lazy(() => import('@/pages/relatorios/RelatoriosPage'))
 
 const qc = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -57,6 +59,16 @@ export default function App() {
                   <Route path="/app/email" element={
                     <RequireModule mod="email">
                       <Suspense fallback={<PageLoader />}><EmailPage /></Suspense>
+                    </RequireModule>
+                  } />
+                  <Route path="/app/dashboard" element={
+                    <RequireModule mod="dashboard">
+                      <Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>
+                    </RequireModule>
+                  } />
+                  <Route path="/app/relatorios" element={
+                    <RequireModule mod="relatorios">
+                      <Suspense fallback={<PageLoader />}><RelatoriosPage /></Suspense>
                     </RequireModule>
                   } />
                 </Route>
