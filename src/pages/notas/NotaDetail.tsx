@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TransferenciaDialog } from './TransferenciaDialog'
 import { ComposeEmailDialog } from '@/pages/email/ComposeEmailDialog'
-import type { FreteTipo, NotaFiscal, SupabaseStatus } from '@/types/database'
+import type { FreteTipo, SupabaseStatus } from '@/types/database'
 
 const STATUS_OPTIONS: SupabaseStatus[] = ['Pendente', 'Em Transferência', 'Devolvido', 'Cancelado', 'Vendido']
 const FRETE_TIPOS: FreteTipo[] = ['Tabela', 'Valor+ICMS', 'Valor', 'Cortesia']
@@ -364,7 +364,7 @@ export function NotaDetail({ id, onClose }: Props) {
                   </TabsContent>
 
                 <TransferenciaDialog nota={nota as Parameters<typeof TransferenciaDialog>[0]['nota']} open={tfOpen} onClose={() => setTfOpen(false)} />
-                <ComposeEmailDialog open={emailOpen} onClose={() => setEmailOpen(false)} preSelectedNota={nota as NotaFiscal} />
+                <ComposeEmailDialog open={emailOpen} onClose={() => setEmailOpen(false)} />
               </>
             ) : null}
           </motion.div>

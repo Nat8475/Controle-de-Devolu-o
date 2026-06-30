@@ -1,11 +1,89 @@
-import { useState } from 'react'
-import { Settings, Users, Shield, Save, Plus, Trash2 } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Settings, Users, Shield, Save, Plus, Trash2, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useConfigs, useUpdateConfig, useProfiles, useCargos, useAssignCargo, useCreateCargo, useDeleteCargo } from '@/hooks/useAdmin'
+import { useAssinaturas, useUpdateAssinaturas } from '@/hooks/useEmail'
+import { useR2Upload } from '@/hooks/useR2Upload'
 import type { Modulo } from '@/types/database'
+
+function AssinaturasTab() {
+  const { data: assinaturas = [], isLoading } = useAssinaturas()
+  const updateAssinaturas = useUpdateAssinaturas()
+  const { upload, uploading } = useR2Upload()
+  const [novoNome, setNovoNome] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !novoNome.trim()) return
+    const result = await upload(file, 'assinaturas')
+    if (!result) return
+    await updateAssinaturas.mutateAsync([...assinaturas, { nome: novoNome.trim(), url: result.url }])
+    setNovoNome('')
+    e.target.value = ''
+  }
+
+  function remover(url: string) {
+    updateAssinaturas.mutate(assinaturas.filter(a => a.url !== url))
+  }
+
+  return (
+    <div className="space-y-4 max-w-lg">
+      <p className="text-xs text-[var(--text-muted)]">
+        Imagens de assinatura usadas nos e-mails de devolução (armazenadas no R2).
+        Formatos aceitos: JPG ou PNG, máx. 5 MB.
+      </p>
+
+      {isLoading && <p className="text-sm text-[var(--text-muted)]">Carregando...</p>}
+
+      <div className="space-y-2">
+        {assinaturas.map(a => (
+          <div key={a.url} className="flex items-center gap-3 border border-[var(--border)] rounded-btn px-3 py-2 bg-surface dark:bg-surface-dark">
+            <img src={a.url} alt={a.nome} className="h-10 max-w-[140px] object-contain rounded border border-[var(--border)]" />
+            <span className="flex-1 text-sm text-[var(--text)] truncate">{a.nome}</span>
+            <Button
+              size="sm" variant="outline"
+              className="h-7 w-7 p-0 text-red-500 hover:text-red-600 flex-shrink-0"
+              onClick={() => window.confirm(`Remover "${a.nome}"?`) && remover(a.url)}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        ))}
+        {assinaturas.length === 0 && !isLoading && (
+          <p className="text-sm text-[var(--text-muted)]">Nenhuma assinatura cadastrada.</p>
+        )}
+      </div>
+
+      <div className="border border-dashed border-[var(--border)] rounded-card p-4 space-y-3">
+        <p className="text-sm font-semibold text-[var(--text)] flex items-center gap-2">
+          <Plus className="w-4 h-4" />Nova Assinatura
+        </p>
+        <div className="space-y-1">
+          <Label className="text-xs">Nome de exibição</Label>
+          <Input
+            value={novoNome}
+            onChange={e => setNovoNome(e.target.value)}
+            placeholder="Ex: Natã Da Rosa — TransBen"
+            className="text-sm"
+          />
+        </div>
+        <Button
+          className="bg-primary gap-2"
+          disabled={!novoNome.trim() || uploading || updateAssinaturas.isPending}
+          onClick={() => fileRef.current?.click()}
+        >
+          <ImageIcon className="w-4 h-4" />
+          {uploading ? 'Enviando...' : 'Selecionar imagem e salvar'}
+        </Button>
+        <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png" className="hidden" onChange={handleUpload} />
+      </div>
+    </div>
+  )
+}
 
 const ALL_MODULOS: Modulo[] = ['notas', 'lancamento', 'email', 'transferencias', 'relatorios', 'dashboard', 'auditoria', 'backup', 'configuracoes']
 const MODULO_LABELS: Record<Modulo, string> = {
@@ -187,10 +265,12 @@ export default function ConfiguracoesPage() {
           <TabsTrigger value="geral" className="gap-1.5"><Settings className="w-3.5 h-3.5" />Geral</TabsTrigger>
           <TabsTrigger value="usuarios" className="gap-1.5"><Users className="w-3.5 h-3.5" />Usuários</TabsTrigger>
           <TabsTrigger value="cargos" className="gap-1.5"><Shield className="w-3.5 h-3.5" />Cargos</TabsTrigger>
+          <TabsTrigger value="assinaturas" className="gap-1.5"><ImageIcon className="w-3.5 h-3.5" />Assinaturas</TabsTrigger>
         </TabsList>
         <TabsContent value="geral"><GeralTab /></TabsContent>
         <TabsContent value="usuarios"><UsuariosTab /></TabsContent>
         <TabsContent value="cargos"><CargosTab /></TabsContent>
+        <TabsContent value="assinaturas"><AssinaturasTab /></TabsContent>
       </Tabs>
     </div>
   )
