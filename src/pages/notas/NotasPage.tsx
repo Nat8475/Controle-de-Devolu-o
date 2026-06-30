@@ -16,7 +16,7 @@ export default function NotasPage() {
   const navigate = useNavigate()
   const store = useNotasStore()
   const { data = [], isLoading, refetch } = useNotas(store.filters)
-  const { updateStatus, softDelete } = useNotasMutation()
+  const { updateStatus } = useNotasMutation()
   const [detailId, setDetailId] = useState<string | null>(null)
 
   useEffect(() => {

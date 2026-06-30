@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, ShoppingCart, Truck, FileDown, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useNavigate } from 'react-router-dom'
 import type { NotaFiscal } from '@/types/database'
 
 type BulkAction = 'devolver' | 'venda' | 'frete' | 'email' | 'docCarga'
