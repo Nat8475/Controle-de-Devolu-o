@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Filter, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import type { NotasFilters } from '@/stores/notasStore'
+import { useNotasStore, type NotasFilters } from '@/stores/notasStore'
 
 interface Props {
   filters: NotasFilters
@@ -12,10 +13,26 @@ interface Props {
 }
 
 export function NotasFilters({ filters, onFilter, onReset, visible, onToggle }: Props) {
+  const savedPresets = useNotasStore(s => s.savedPresets)
+  const savePreset = useNotasStore(s => s.savePreset)
+  const applyPreset = useNotasStore(s => s.applyPreset)
+  const deletePreset = useNotasStore(s => s.deletePreset)
+
+  const [showSaveInput, setShowSaveInput] = useState(false)
+  const [presetNome, setPresetNome] = useState('')
+
   const activeCount = [
     filters.status, filters.aba, filters.dataIni, filters.dataFim,
     filters.semFrete ? '1' : '', filters.busca,
   ].filter(Boolean).length
+
+  function handleSavePreset() {
+    const nome = presetNome.trim()
+    if (!nome) return
+    savePreset(nome)
+    setPresetNome('')
+    setShowSaveInput(false)
+  }
 
   return (
     <div className="border-b border-[var(--border)]">
@@ -38,6 +55,82 @@ export function NotasFilters({ filters, onFilter, onReset, visible, onToggle }: 
             exit={{ height: 0 }}
             className="overflow-hidden"
           >
+            <div className="px-4 pt-3 flex flex-wrap items-center gap-2 border-b border-[var(--border)] pb-3">
+              <select
+                value=""
+                onChange={e => { if (e.target.value) applyPreset(e.target.value) }}
+                className="rounded-btn border border-[var(--border)] bg-surface dark:bg-surface-dark text-[var(--text)] text-sm px-2 py-1.5"
+              >
+                <option value="">Filtros salvos...</option>
+                {savedPresets.map(p => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </select>
+
+              {savedPresets.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {savedPresets.map(p => (
+                    <span
+                      key={p.id}
+                      className="flex items-center gap-1 pl-2 pr-1 py-1 bg-[var(--border)] rounded-badge text-xs text-[var(--text)]"
+                    >
+                      <button
+                        onClick={() => applyPreset(p.id)}
+                        className="hover:text-primary transition-colors"
+                        title={`Aplicar "${p.nome}"`}
+                      >
+                        {p.nome}
+                      </button>
+                      <button
+                        onClick={() => deletePreset(p.id)}
+                        className="text-[var(--text-muted)] hover:text-danger transition-colors"
+                        title="Remover filtro salvo"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="ml-auto flex items-center gap-2">
+                {showSaveInput ? (
+                  <>
+                    <Input
+                      autoFocus
+                      value={presetNome}
+                      onChange={e => setPresetNome(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleSavePreset()
+                        if (e.key === 'Escape') { setShowSaveInput(false); setPresetNome('') }
+                      }}
+                      placeholder="Nome do filtro..."
+                      className="text-sm h-8 w-40"
+                    />
+                    <button
+                      onClick={handleSavePreset}
+                      className="px-2 py-1 text-xs rounded-btn bg-primary text-white hover:opacity-90 transition-opacity"
+                    >
+                      Confirmar
+                    </button>
+                    <button
+                      onClick={() => { setShowSaveInput(false); setPresetNome('') }}
+                      className="text-[var(--text-muted)] hover:text-danger transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setShowSaveInput(true)}
+                    className="px-2 py-1 text-xs rounded-btn border border-[var(--border)] text-[var(--text)] hover:bg-[var(--border)] transition-colors whitespace-nowrap"
+                  >
+                    💾 Salvar filtro atual
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <select
                 value={filters.status}

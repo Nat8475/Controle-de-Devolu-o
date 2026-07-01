@@ -2,8 +2,9 @@ import { useCallback, useState } from 'react'
 import { Upload, X } from 'lucide-react'
 import { useR2Upload } from '@/hooks/useR2Upload'
 import { cn } from '@/lib/utils'
+import { toast } from '@/stores/toastStore'
 
-interface UploadedPhoto { url: string; r2Key: string; preview: string }
+interface UploadedPhoto { url: string; r2Key: string; preview: string; fileName: string }
 
 interface Props {
   folder: string
@@ -18,17 +19,21 @@ export function FotoUpload({ folder, onUploaded }: Props) {
   const processFiles = useCallback(async (files: FileList | File[]) => {
     const arr = Array.from(files).slice(0, 10 - photos.length)
     for (const file of arr) {
+      if (photos.some(p => p.fileName === file.name)) {
+        toast(`Arquivo "${file.name}" já foi adicionado`, 'err')
+        continue
+      }
       const preview = URL.createObjectURL(file)
       const result = await upload(file, folder)
       if (result) {
         setPhotos(prev => {
-          const next = [...prev, { ...result, preview }]
+          const next = [...prev, { ...result, preview, fileName: file.name }]
           onUploaded(next.map(p => ({ url: p.url, r2Key: p.r2Key })))
           return next
         })
       }
     }
-  }, [photos.length, upload, folder, onUploaded])
+  }, [photos, upload, folder, onUploaded])
 
   function removePhoto(r2Key: string) {
     setPhotos(prev => {

@@ -5,6 +5,8 @@ interface ParsedXml {
   data: string
   fornecedor: string
   valor: number
+  qtd: number
+  descricao: string
 }
 
 interface Props { onParsed: (data: ParsedXml) => void }
@@ -21,7 +23,26 @@ export function XmlImporter({ onParsed }: Props) {
     const vNF = doc.querySelector('vNF')?.textContent?.trim() ?? '0'
     const data = dhEmi ? dhEmi.slice(0, 10) : ''
 
-    return { nf: nNF, data, fornecedor: xNome.toUpperCase(), valor: parseFloat(vNF) || 0 }
+    // Produtos: NF-e pode ter múltiplos <det><prod>. Soma qCom e concatena até 3 xProd.
+    const dets = Array.from(doc.querySelectorAll('det'))
+    let qtdTotal = 0
+    const xProds: string[] = []
+    for (const det of dets) {
+      const qCom = parseFloat(det.querySelector('prod > qCom')?.textContent?.trim() ?? '0')
+      const xProd = det.querySelector('prod > xProd')?.textContent?.trim() ?? ''
+      if (!isNaN(qCom)) qtdTotal += qCom
+      if (xProd) xProds.push(xProd)
+    }
+    const descricao = xProds.slice(0, 3).join('; ')
+
+    return {
+      nf: nNF,
+      data,
+      fornecedor: xNome.toUpperCase(),
+      valor: parseFloat(vNF) || 0,
+      qtd: Math.round(qtdTotal),
+      descricao,
+    }
   }
 
   function handleFile(file: File) {

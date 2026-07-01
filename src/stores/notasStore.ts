@@ -21,11 +21,18 @@ const DEFAULT_FILTERS: NotasFilters = {
   busca: '',
 }
 
+export interface NotasFilterPreset {
+  id: string
+  nome: string
+  filters: NotasFilters
+}
+
 const STORAGE_KEYS = {
   filters: 'cdv_filtros_salvos',
   density: 'cdv_density',
   columns: 'cdv_colunas',
   kpiVis: 'cdv_kpi_visibilidade',
+  presets: 'cdv_filtros_presets',
 }
 
 function loadFromStorage<T>(key: string, fallback: T): T {
@@ -40,6 +47,7 @@ interface NotasState {
   density: Density
   columnVisibility: Record<string, boolean>
   kpiVisibility: Record<string, boolean>
+  savedPresets: NotasFilterPreset[]
   setFilter: (key: keyof NotasFilters, value: string | boolean) => void
   resetFilters: () => void
   toggleFiltersVisible: () => void
@@ -49,6 +57,9 @@ interface NotasState {
   setDensity: (d: Density) => void
   setColumnVisibility: (col: string, visible: boolean) => void
   toggleKpi: (key: string) => void
+  savePreset: (nome: string) => void
+  applyPreset: (id: string) => void
+  deletePreset: (id: string) => void
 }
 
 export const useNotasStore = create<NotasState>((set, get) => ({
@@ -65,6 +76,7 @@ export const useNotasStore = create<NotasState>((set, get) => ({
     pendente: true, em_transferencia: true, devolvido: true,
     venda: true, total: true, caixas: true,
   }),
+  savedPresets: loadFromStorage<NotasFilterPreset[]>(STORAGE_KEYS.presets, []),
   setFilter: (key, value) => {
     const filters = { ...get().filters, [key]: value }
     set({ filters, selectedIds: new Set() })
@@ -96,5 +108,26 @@ export const useNotasStore = create<NotasState>((set, get) => ({
     const kv = { ...get().kpiVisibility, [key]: !get().kpiVisibility[key] }
     set({ kpiVisibility: kv })
     localStorage.setItem(STORAGE_KEYS.kpiVis, JSON.stringify(kv))
+  },
+  savePreset: (nome) => {
+    const preset: NotasFilterPreset = {
+      id: crypto.randomUUID(),
+      nome,
+      filters: get().filters,
+    }
+    const presets = [...get().savedPresets, preset]
+    set({ savedPresets: presets })
+    localStorage.setItem(STORAGE_KEYS.presets, JSON.stringify(presets))
+  },
+  applyPreset: (id) => {
+    const preset = get().savedPresets.find(p => p.id === id)
+    if (!preset) return
+    set({ filters: preset.filters, selectedIds: new Set() })
+    localStorage.setItem(STORAGE_KEYS.filters, JSON.stringify(preset.filters))
+  },
+  deletePreset: (id) => {
+    const presets = get().savedPresets.filter(p => p.id !== id)
+    set({ savedPresets: presets })
+    localStorage.setItem(STORAGE_KEYS.presets, JSON.stringify(presets))
   },
 }))

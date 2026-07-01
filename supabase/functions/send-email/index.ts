@@ -36,6 +36,7 @@ serve(async (req) => {
 
     let emailStatus = 'enviado'
     let enviado_em: string | null = new Date().toISOString()
+    let sendError: string | null = null
 
     if (RESEND_KEY) {
       const res = await fetch('https://api.resend.com/emails', {
@@ -46,7 +47,14 @@ serve(async (req) => {
       if (!res.ok) {
         emailStatus = 'erro'
         enviado_em = null
+        sendError = await res.text().catch(() => `HTTP ${res.status}`)
+        console.error('Resend API error:', res.status, sendError)
       }
+    } else {
+      emailStatus = 'erro'
+      enviado_em = null
+      sendError = 'RESEND_API_KEY não configurada'
+      console.error(sendError)
     }
 
     const { error } = await supabase.from('emails_log').insert({
@@ -60,7 +68,7 @@ serve(async (req) => {
     })
     if (error) throw error
 
-    return new Response(JSON.stringify({ ok: true, status: emailStatus }), {
+    return new Response(JSON.stringify({ ok: true, status: emailStatus, sendError }), {
       headers: { 'Content-Type': 'application/json', ...CORS },
     })
   } catch (e) {

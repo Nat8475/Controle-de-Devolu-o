@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, ShoppingCart, Truck, FileDown, X } from 'lucide-react'
+import { Mail, ShoppingCart, Truck, FileDown, X, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { NotaFiscal } from '@/types/database'
 
@@ -16,6 +16,7 @@ export function NotasBulkBar({ selectedIds, data, onAction, onClear }: Props) {
   const selected = data.filter(n => selectedIds.has(n.id))
   const allSameFornecedor = selected.length > 0 &&
     new Set(selected.map(n => n.fornecedor)).size === 1
+  const emTransferencia = selected.filter(n => n.status === 'Em Transferência')
 
   return (
     <AnimatePresence>
@@ -24,8 +25,19 @@ export function NotasBulkBar({ selectedIds, data, onAction, onClear }: Props) {
           initial={{ y: 80 }}
           animate={{ y: 0 }}
           exit={{ y: 80 }}
-          className="fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 z-30 bg-[#1E293B] text-white rounded-card shadow-soft-lg flex items-center gap-2 px-4 py-3"
+          className="fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 z-30 bg-[#1E293B] text-white rounded-card shadow-soft-lg flex flex-col gap-2 px-4 py-3 max-w-[95vw]"
         >
+          {emTransferencia.length > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-amber-300 px-0.5">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                {emTransferencia.length} nota{emTransferencia.length > 1 ? 's' : ''} em transferência não
+                {emTransferencia.length > 1 ? ' serão' : ' será'} afetada{emTransferencia.length > 1 ? 's' : ''} por algumas ações
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium mr-2">{selectedIds.size} selecionadas</span>
 
           <Button size="sm" onClick={() => onAction('devolver', selected)}
@@ -65,6 +77,7 @@ export function NotasBulkBar({ selectedIds, data, onAction, onClear }: Props) {
           <button onClick={onClear} className="ml-2 text-slate-400 hover:text-white">
             <X className="w-4 h-4" />
           </button>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

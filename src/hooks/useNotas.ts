@@ -4,6 +4,15 @@ import { toast } from '@/stores/toastStore'
 import type { NotaFiscal, SupabaseStatus } from '@/types/database'
 import type { NotasFilters } from '@/stores/notasStore'
 
+/**
+ * Remove acentos/diacríticos de um termo de busca, para tolerar variações
+ * de acentuação (ex: "devolucao" deve encontrar "devolução").
+ * Mesma estratégia usada no legado (_normFonetico em FormNotas.html).
+ */
+function normalizeFonetico(s: string) {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
 export function useNotas(filters: NotasFilters) {
   return useQuery({
     queryKey: ['notas', filters],
@@ -21,7 +30,11 @@ export function useNotas(filters: NotasFilters) {
       if (filters.semFrete) q = q.is('frete_tipo', null)
       if (filters.busca) {
         const term = filters.busca.trim()
-        q = q.or(`nfd.ilike.%${term}%,nf.ilike.%${term}%,fornecedor.ilike.%${term}%,descricao.ilike.%${term}%`)
+        const normalized = normalizeFonetico(term)
+        const fields = ['nfd', 'nf', 'fornecedor', 'descricao']
+        const variants = normalized && normalized !== term ? [term, normalized] : [term]
+        const orParts = fields.flatMap(field => variants.map(v => `${field}.ilike.%${v}%`))
+        q = q.or(orParts.join(','))
       }
 
       const { data, error } = await q

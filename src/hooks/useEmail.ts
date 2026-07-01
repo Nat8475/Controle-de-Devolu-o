@@ -146,13 +146,16 @@ export function useSendEmail() {
         },
         body: JSON.stringify(payload),
       })
-      const json = await res.json() as { ok?: boolean; status?: string; error?: string }
+      const json = await res.json() as { ok?: boolean; status?: string; error?: string; sendError?: string }
       if (!res.ok) throw new Error(json.error ?? 'Erro ao enviar')
       return json
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['emails'] })
-      toast(data.status === 'erro' ? 'Salvo mas não enviado (verifique RESEND_API_KEY)' : 'E-mail enviado', data.status === 'erro' ? 'err' : 'ok')
+      toast(
+        data.status === 'erro' ? `Salvo mas não enviado: ${data.sendError ?? 'erro desconhecido'}` : 'E-mail enviado',
+        data.status === 'erro' ? 'err' : 'ok'
+      )
     },
     onError: (e: Error) => toast(e.message, 'err'),
   })

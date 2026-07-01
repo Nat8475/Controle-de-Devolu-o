@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/stores/toastStore'
 import { useAuth } from '@/contexts/AuthContext'
@@ -20,23 +20,44 @@ export interface LancamentoData {
   obs?: string
 }
 
+export class DuplicateError extends Error {
+  nf: string
+  aba: SupabaseAba
+
+  constructor(nf: string, aba: SupabaseAba) {
+    super(`NF ${nf} já existe para ${aba}. Deseja salvar mesmo assim?`)
+    this.name = 'DuplicateError'
+    this.nf = nf
+    this.aba = aba
+  }
+}
+
 export function useLancamento() {
   const qc = useQueryClient()
   const { user } = useAuth()
 
   const insertNota = useMutation({
-    mutationFn: async ({ data, fotoUrls }: { data: LancamentoData; fotoUrls: Array<{ url: string; r2Key: string }> }) => {
-      const { data: existing } = await supabase
-        .from('notas_fiscais')
-        .select('id')
-        .eq('nf', data.nf)
-        .eq('aba', data.aba)
-        .is('deleted_at', null)
-        .single()
+    mutationFn: async ({
+      data,
+      fotoUrls,
+      force = false,
+    }: {
+      data: LancamentoData
+      fotoUrls: Array<{ url: string; r2Key: string }>
+      force?: boolean
+    }) => {
+      if (!force) {
+        const { data: existing } = await supabase
+          .from('notas_fiscais')
+          .select('id')
+          .eq('nf', data.nf)
+          .eq('aba', data.aba)
+          .is('deleted_at', null)
+          .single()
 
-      if (existing) {
-        const confirmed = window.confirm(`NF ${data.nf} já existe para ${data.aba}. Deseja salvar mesmo assim?`)
-        if (!confirmed) throw new Error('CANCELLED')
+        if (existing) {
+          throw new DuplicateError(data.nf, data.aba)
+        }
       }
 
       const { data: inserted, error } = await supabase
@@ -66,9 +87,32 @@ export function useLancamento() {
       localStorage.removeItem('cdv_draft_lancamento')
     },
     onError: (e: Error) => {
-      if (e.message !== 'CANCELLED') toast(e.message, 'err')
+      if (e instanceof DuplicateError) return
+      toast(e.message, 'err')
     },
   })
 
   return { insertNota }
+}
+
+/** Fornecedores distintos já lançados na aba "Variados", para sugestão via datalist. */
+export function useFornecedoresVariados(enabled: boolean) {
+  return useQuery({
+    queryKey: ['fornecedores-variados'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('notas_fiscais')
+        .select('fornecedor')
+        .eq('aba', 'Variados')
+      if (error) throw error
+
+      const unicos = new Set<string>()
+      for (const row of data ?? []) {
+        if (row.fornecedor) unicos.add(row.fornecedor)
+      }
+      return Array.from(unicos).sort()
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  })
 }
